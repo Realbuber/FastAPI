@@ -77,7 +77,7 @@ def create_post(post: Post):
 def get_post(id:int):
     cur.execute("""SELECT * FROM posts WHERE id = %s""",(str(id),))
     post = cur.fetchone()
-
+#123
     #post = find_post(id)
 
     if post==None:
