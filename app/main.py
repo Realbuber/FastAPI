@@ -1,4 +1,5 @@
-from fastapi import FastAPI,Response,status,HTTPException
+import os
+from fastapi import FastAPI,Response,status,HTTPException, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -6,7 +7,16 @@ from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from sqlalchemy.orm import Session
+
+from models import Post
+from database import engine, get_db
+
+Post.metadata.create_all(bind=engine)
 app = FastAPI()
+
+
+
 
 
 class Post(BaseModel):
@@ -32,36 +42,24 @@ while True:
         print("Error:",error)
         time.sleep(2)
 
-#request Get method url:"/"
-my_posts = [{"title": "title of post 1","content":"content of post 1","published": True,
-        "rating": 4,"id":1},
-            {"title": "favorite foods","content:":"pizza","published": True,
-        "rating": 4,"id": 2 }
-            ]
-
-def find_post(id):
-    for p in my_posts:
-        if p["id"] == id:
-            return p
-
-def find_index_post(id):
-    for i,p in enumerate(my_posts):
-        if p['id'] == id:
-            return i
-
-
 
 @app.get("/")
 def root():
     return {"message": "Hello World"}
 
+@app.get("/sqlalchemy")
+def test_posts(db:Session =Depends(get_db)):
+
+    posts = db.query(Post).all()
+
+    return {"data":posts}
 
 @app.get("/posts")
 def get_posts():
     cur.execute("""SELECT * FROM posts""")
     posts =cur.fetchall()
     print(posts)
-    return {"data":my_posts}
+    return {"data":posts}
 
 @app.post("/posts",status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
